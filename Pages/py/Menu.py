@@ -83,7 +83,7 @@ class Menu(QMainWindow):
         self.table.setColumnCount(len(columns))  # Set three columns
 
         L = self.L = len(data)
-        l = len(data[0])
+        self.l = l = len(data[0])
         self.table.setRowCount(L)  # and one row
 
         # Set the table headers
@@ -101,13 +101,13 @@ class Menu(QMainWindow):
 
         add_row = QPushButton('Добавить строку', self)
         add_row.clicked.connect(self.add_button)
-        del_row = QPushButton('Удалить строку', self)
-        del_row.clicked.connect(self.del_button)
+        '''del_row = QPushButton('Удалить строку', self)
+        del_row.clicked.connect(self.del_button)'''
         save_row = QPushButton('Сохранить таблицу', self)
         save_row.clicked.connect(partial(self.save_button, name))
 
         grid_layout.addWidget(add_row, 1, 0)  # Adding the table to the grid
-        grid_layout.addWidget(del_row, 2, 0)  # Adding the table to the grid
+        '''grid_layout.addWidget(del_row, 2, 0)  # Adding the table to the grid'''
         grid_layout.addWidget(save_row, 3, 0)  # Adding the table to the grid
 
     def add_button(self):
@@ -125,16 +125,17 @@ class Menu(QMainWindow):
         if not('.sql' in file_name):
             file_name += '.sql'
 
-        request = f'INSERT INTO `{name}`'
-        columns = [f'`{i}`' for  i in self.columns][1:]
-        request += '('+','.join(columns)+') VALUES '
+        request = f'UPDATE `{name}` SET '
 
         with open(file_name, 'w') as file:
-            for i in range(self.table.rowCount()):
+            ml = self.table.rowCount()
+            for i in range(self.l):
                 T = []
                 for j in range(1, self.table.columnCount()):
-                    T.append("'" + self.table.item(i, j).text() + "'")
-                T = '('+ ','.join(T) +');'
+                    T.append(f"`{self.columns[j]}`='{self.table.item(i, j).text()}'")
+
+                T = ''+ ','.join(T) +''
+                T += f" WHERE `{self.columns[0]}`={self.table.item(i, 0).text()};"
                 file.write(request + T)
 
 def Menu_Start():
