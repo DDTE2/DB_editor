@@ -30,6 +30,8 @@ def table_gen(name):
             cursor.close()
             conn.close()
 
+            print(table)
+
             return columns, table
         except Exception as error:
             return error

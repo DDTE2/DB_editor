@@ -12,6 +12,8 @@ from functools import partial
 
 from json import dumps
 
+from SQL.DB_algs.key_check import check
+
 class Menu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -82,18 +84,20 @@ class Menu(QMainWindow):
         self.table = QTableWidget(self)  # Create a table
         self.table.setColumnCount(len(columns))  # Set three columns
 
-        L = self.L = len(data)
-        self.l = l = len(data[0])
+        self.l = L = self.L = len(data)
+        l = len(data[0])
         self.table.setRowCount(L)  # and one row
 
         # Set the table headers
         self.table.setHorizontalHeaderLabels(columns)
 
-        # Fill the first line
+        x = check(name)
         for i in range(L):
             for j in range(l):
-                x = data[i][j]
-                self.table.setItem(i, j, QTableWidgetItem(str(x)))
+                item = QTableWidgetItem(str(data[i][j]))
+                if j in x:
+                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                self.table.setItem(i, j, item)
 
         # Do the resize of the columns by content
 
