@@ -1,7 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QFileDialog
-from PyQt5.QtGui import QIcon
-from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel
 
 from SQL.Table_list import creat_list
@@ -10,6 +9,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTa
 from PyQt5.QtCore import QSize, Qt
 from SQL.DB_algs.table_gen import table_gen
 from functools import partial
+
+from json import dumps
 
 class Menu(QMainWindow):
     def __init__(self):
@@ -65,10 +66,14 @@ class Menu(QMainWindow):
                 export_data(file.read())
 
     def table_gen(self, name):
+        self.add_req = []
+        self.del_req = []
+
         self.cw = QWidget(self)  # Create a central widget
         self.setCentralWidget(self.cw)  # Install the central widge
 
         columns, data = table_gen(name)
+        self.columns = columns
 
         grid_layout = QGridLayout(self)  # Create QGridLayout
 
@@ -98,19 +103,39 @@ class Menu(QMainWindow):
         add_row.clicked.connect(self.add_button)
         del_row = QPushButton('Удалить строку', self)
         del_row.clicked.connect(self.del_button)
+        save_row = QPushButton('Сохранить таблицу', self)
+        save_row.clicked.connect(partial(self.save_button, name))
 
         grid_layout.addWidget(add_row, 1, 0)  # Adding the table to the grid
         grid_layout.addWidget(del_row, 2, 0)  # Adding the table to the grid
+        grid_layout.addWidget(save_row, 3, 0)  # Adding the table to the grid
 
     def add_button(self):
         row = self.table.rowCount()
         self.table.insertRow(row)
-        self.table.selectRow(-1)
+        self.table.selectRow(row)
 
     def del_button(self):
         if self.table.selectionModel().hasSelection():
             for index in self.table.selectedIndexes():
                 self.table.removeRow(index.row())
+
+    def save_button(self, name):
+        file_name = QFileDialog.getSaveFileName(self, 'Сохранить таблицу', '', 'SQL (.sql)')[0]
+        if not('.sql' in file_name):
+            file_name += '.sql'
+
+        request = f'INSERT INTO `{name}`'
+        columns = [f'`{i}`' for  i in self.columns][1:]
+        request += '('+','.join(columns)+') VALUES '
+
+        with open(file_name, 'w') as file:
+            for i in range(self.table.rowCount()):
+                T = []
+                for j in range(1, self.table.columnCount()):
+                    T.append("'" + self.table.item(i, j).text() + "'")
+                T = '('+ ','.join(T) +');'
+                file.write(request + T)
 
 def Menu_Start():
     app = QApplication(sys.argv)
