@@ -1,4 +1,4 @@
-from json import dumps, loads
+from json import  loads
 try:
     with open('user.data', 'r') as file:
         data = loads(file.read())

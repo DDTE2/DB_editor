@@ -68,9 +68,6 @@ class Menu(QMainWindow):
                 export_data(file.read())
 
     def table_gen(self, name):
-        self.add_req = []
-        self.del_req = []
-
         self.cw = QWidget(self)  # Create a central widget
         self.setCentralWidget(self.cw)  # Install the central widge
 
@@ -92,7 +89,11 @@ class Menu(QMainWindow):
         self.table.setHorizontalHeaderLabels(columns)
 
         x = check(name)
+
+        self.max_index = 0
         for i in range(L):
+            self.max_index = max(int(data[i][0]), self.max_index)
+
             for j in range(l):
                 item = QTableWidgetItem(str(data[i][j]))
                 if j in x:
@@ -114,10 +115,26 @@ class Menu(QMainWindow):
         '''grid_layout.addWidget(del_row, 2, 0)  # Adding the table to the grid'''
         grid_layout.addWidget(save_row, 3, 0)  # Adding the table to the grid
 
+        del columns, data, i, self.L
+
     def add_button(self):
         row = self.table.rowCount()
+
         self.table.insertRow(row)
         self.table.selectRow(row)
+
+        self.max_index += 1
+
+        item = QTableWidgetItem(str(self.max_index))
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+        self.table.setItem(row, 0, item)
+
+        try:
+            x = self.table.item(row, 1).text()
+            print(str(x))
+        except Exception as err:
+            print(err, row)
 
     def del_button(self):
         if self.table.selectionModel().hasSelection():
@@ -131,7 +148,7 @@ class Menu(QMainWindow):
 
         request = f'UPDATE `{name}` SET '
 
-        with open(file_name, 'w') as file:
+        with open(file_name, 'w', encoding='windows-1251') as file:
             ml = self.table.rowCount()
             for i in range(self.l):
                 T = []
@@ -139,7 +156,7 @@ class Menu(QMainWindow):
                     T.append(f"`{self.columns[j]}`='{self.table.item(i, j).text()}'")
 
                 T = ''+ ','.join(T) +''
-                T += f" WHERE `{self.columns[0]}`={self.table.item(i, 0).text()};"
+                T += f" WHERE `{self.columns[0]}`={self.table.item(i, 0).text()};\n"
                 file.write(request + T)
 
 def Menu_Start():
